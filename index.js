@@ -10,7 +10,6 @@ app.use(cors())
 
 app.post('/checkout', async(req, res) => {
     try {
-        console.log("req-body: ", req.body);
         token = req.body.token
         console.log('token id:', token)
       const customer = stripe.customers
@@ -24,7 +23,7 @@ app.post('/checkout', async(req, res) => {
           return stripe.charges.create({
             amount: token.amount,
             description: "Test Purchase using express and Node",
-            currency: "USD",
+            currency: token.currency,
             customer: customer.id,
           });
         })
