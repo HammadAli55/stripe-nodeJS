@@ -3,31 +3,30 @@ const bodyparser = require('body-parser')
 const app = express();
 app.use(bodyparser.urlencoded({ extended: false }))
 app.use(bodyparser.json())
-const stripe = require("stripe")("enter secret key here");
+const stripe = require("stripe")("");
 const cors = require('cors')
 
 app.use(cors())
 
 app.post('/checkout', async(req, res) => {
     try {
-        console.log(req.body);
+        console.log("req-body: ", req.body);
         token = req.body.token
       const customer = stripe.customers
         .create({
-          email: "hammadalii@outlook.com",
+          email: token.owner.email,
           source: token.id
         })
         .then((customer) => {
           console.log(customer);
           return stripe.charges.create({
-            amount: 1000,
+            amount: token.amount,
             description: "Test Purchase using express and Node",
             currency: "USD",
             customer: customer.id,
           });
         })
         .then((charge) => {
-          console.log(charge);
             res.json({
               data:"success"
           })
