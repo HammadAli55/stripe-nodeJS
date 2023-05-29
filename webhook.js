@@ -13,7 +13,7 @@
 
 // The library needs to be configured with your account's secret key.
 // Ensure the key is kept out of any version control system you might be using.
-const stripe = require('stripe')('sk_test_...');
+const stripe = require('stripe')('sk_test_51MllwGBUJKiCM3GCX0umGaryJz29LzLGJd0GJgOI1bNmSm1XnqDpfI5yGGi9TXu8D63a1i7uU2mNGzEsXSwqVKUr00Bdyepwqp');
 const express = require('express');
 const app = express();
 
@@ -37,6 +37,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), (request, response
   switch (event.type) {
     case 'invoice.payment_succeeded':
       const invoicePaymentSucceeded = event.data.object;
+      console.log("invoicePaymentSucceeded", invoicePaymentSucceeded)
       // Then define and call a function to handle the event invoice.payment_succeeded
       break;
     // ... handle other event types
