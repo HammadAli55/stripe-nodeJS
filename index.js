@@ -1,48 +1,71 @@
 const express = require("express");
-const bodyparser = require('body-parser')
+const bodyparser = require("body-parser");
 const app = express();
-app.use(bodyparser.urlencoded({ extended: false }))
-app.use(bodyparser.json())
-const stripe = require("stripe")("");
-const cors = require('cors')
+app.use(bodyparser.urlencoded({ extended: false }));
+app.use(bodyparser.json());
+const stripe = require("stripe")(
+  "sk_test_51MllwGBUJKiCM3GCX0umGaryJz29LzLGJd0GJgOI1bNmSm1XnqDpfI5yGGi9TXu8D63a1i7uU2mNGzEsXSwqVKUr00Bdyepwqp"
+);
+const cors = require("cors");
 
-app.use(cors())
+app.use(cors());
 
-app.post('/checkout', async(req, res) => {
-    try {
-        token = req.body.token
-        console.log('token id:', token)
+app.post("/checkout", async (req, res) => {
+  try {
+    token = req.body.token;
+    userData =  req.body.userData;
+    console.log("token id:", userData);
+    const customers = await stripe.customers.list({ email: token.owner.email });
+    if (customers.data.length > 0) {
+      // Customer exists
+      console.log("customer exists");
+      return false;
+    } else {
+      //create customer
       const customer = stripe.customers
         .create({
           email: token.owner.email,
           source: token.id,
-          address: token.owner.address
+          address: token.owner.address,
+          metadata: { customer_kuid: userData.customer_kuid }
         })
+        // instant charege customer
+        // .then((customer) => {
+        //   return stripe.charges.create({
+        //     amount: token.amount,
+        //     description: "Test Purchase using express and Node",
+        //     currency: token.currency,
+        //     customer: customer.id,
+        //   });
+        // })
+        // subscription
         .then((customer) => {
-          // console.log(customer);
-          return stripe.charges.create({
-            amount: token.amount,
-            description: "Test Purchase using express and Node",
-            currency: token.currency,
+          return stripe.subscriptions.create({
             customer: customer.id,
+            items: [{ price: "price_1MoKFEBUJKiCM3GCEIvHF09Y" }],
+            billing_cycle_anchor: 1685102231,
           });
         })
         .then((charge) => {
-            res.json({
-              data:"success"
-          })
+          res.json({
+            data: "success",
+          });
         })
         .catch((err) => {
-            res.json({
-              data: "failure",
-            });
+          console.error("err:", err);
+          res.json({
+            data: "failure",
+          });
         });
       return true;
-    } catch (error) {
-      return false;
     }
-})
+  } catch (error) {
+    // Handle any errors
+    console.error("Error checking customer:", error);
+    return false;
+  }
+});
 
 app.listen(5000, () => {
-    console.log("App is listening on Port 5000")
+  console.log("App is listening on Port 5000")
 })
